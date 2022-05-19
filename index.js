@@ -33,5 +33,55 @@ exports.handler = async (event) => {
    return response;
 };
 
+//Simple books code
 
+'use strict';
+console.log('Loading function');
+
+var AWS = require('aws-sdk');
+var dynamo = new AWS.DynamoDB.DocumentClient();
+
+
+exports.handler = function(event, context, callback) {
+    console.log('Received event:', JSON.stringify(event, null, 2));
+    const done = (err, res) => callback(null, {
+        statusCode: err ? '400' : '200',
+        payload: err ? err.message : res,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    var operation = event.operation;
+
+    if (event.tableName) {
+        event.payload.TableName = event.tableName;
+    }
+
+    switch (operation) {
+        case 'create':
+            dynamo.put(event.payload, done);
+            break;
+        case 'read':
+            dynamo.get(event.payload, done);
+            break;
+        case 'update':
+            dynamo.put(event.payload, done);
+            break;
+        case 'delete':
+            dynamo.delete(event.payload, done);
+            break;
+        case 'list':
+            dynamo.scan(event.payload, done);
+            break;
+        case 'echo':
+            callback(null, "Success");
+            break;
+        case 'ping':
+            callback(null, "pong");
+            break;
+        default:
+            done('Unknown operation: ${operation}');
+    }
+};
 
